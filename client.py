@@ -7,9 +7,10 @@ import sys
 import time
 
 HOST = 'localhost'      # Address of the host running the server  
-PORT = 7000            # The same port as used by the server
+PORT = 3700            # The same port as used by the server
 sel = selectors.DefaultSelector()
 name = input("Nome do cliente: ")
+channel=input("Nome do canal: ")
 
 def read(conn, mask):
     data = conn.recv(1000)  # Should be ready
@@ -34,6 +35,7 @@ def got_keyboard_data(arg1, mask):
             "op":"msg",
             "data":msg,
             "user":name,
+            "channel":channel,
             "ts":time.time()
         }
         w = json.dumps(z).encode('utf-8')
@@ -42,7 +44,7 @@ def got_keyboard_data(arg1, mask):
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
-    strjson = json.dumps({"op":"register","user":name})
+    strjson = json.dumps({"op":"register","user":name,"channel":channel})
     s.sendall(strjson.encode("utf-8"))
     sel.register(s, selectors.EVENT_READ, read)
     sel.register(sys.stdin, selectors.EVENT_READ, got_keyboard_data)

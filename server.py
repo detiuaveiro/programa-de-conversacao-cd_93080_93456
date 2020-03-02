@@ -6,9 +6,10 @@ import selectors
 import time
 
 HOST = ''                 # Symbolic name meaning all available interfaces
-PORT = 7000             # Arbitrary non-privileged port
+PORT = 3700             # Arbitrary non-privileged port
 sel = selectors.DefaultSelector()
 clients = {}
+channels = {}
 
 def accept(sock, mask):
     conn, addr = sock.accept()  # Should be ready
@@ -16,6 +17,7 @@ def accept(sock, mask):
     data = conn.recv(1024)
     user = json.loads(data)
     clients[user["user"]]=conn
+    channels[user["user"]]=user["channel"]
     sel.register(conn, selectors.EVENT_READ, read)
 
 def read(conn, mask):
@@ -24,8 +26,9 @@ def read(conn, mask):
     if msg["op"] == "register":
         clients[msg["user"]] = conn  # Hope it won't block
     elif msg["op"] == "msg":
-        for key in clients:
-            if key != msg["user"]:
+        for key in channels:
+            if channels[key] == msg["channel"] and key != msg["user"]:
+
                 clients[key].sendall(data)
     else:
         sel.unregister(conn)
